@@ -31,3 +31,29 @@ body {
   scrollbar-width: thin;
   scrollbar-color: #3f3f46 #121214;
 }
+
+/*
+ * The Popover is teleported to <body> and gets the `.gt-glass` class, whose
+ * `position: relative` overrides the library's own `position: fixed` on
+ * `.gt-popover`. That pushes the dropdown far down the page (it is positioned
+ * by a JS `translate3d` that is only correct when the element is `fixed`).
+ * This global rule restores fixed positioning so the autocomplete anchors
+ * directly below the input.
+ */
+.gt-popover {
+  position: fixed !important;
+  top: 0;
+  left: 0;
+}
+
+/*
+ * The suggestions dropdown is teleported to <body>, so scoped styles in
+ * App.vue cannot reach it. Match its width to the search form so it reads as
+ * an autocomplete attached to the input rather than a floating dialog.
+ */
+.gt-popover:has(.suggest-panel) {
+  width: min(640px, calc(100vw - 32px));
+  min-width: min(640px, calc(100vw - 32px));
+  max-width: min(640px, calc(100vw - 32px));
+  padding: 6px;
+}

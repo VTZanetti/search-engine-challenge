@@ -404,7 +404,20 @@ onUnmounted(() => {
   gap: 10px;
   width: 100%;
   max-width: 640px;
-  align-items: flex-start;
+  /* Align the button with the input, not with the field label above it. */
+  align-items: flex-end;
+}
+
+/*
+ * GlassPopover wraps its trigger in a `span.gt-popover__anchor` with
+ * `display: inline-flex`, which shrink-wraps the form and keeps it from
+ * stretching to its intended 640px. Make the anchor a full-width block so the
+ * form (and therefore the input + button row) fills the available space.
+ */
+.search-zone :deep(.gt-popover__anchor) {
+  display: block;
+  width: min(640px, 100%);
+  margin: 0 auto;
 }
 
 .search-field {
@@ -424,6 +437,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  width: 100%;
 }
 
 .suggest-panel__empty {
