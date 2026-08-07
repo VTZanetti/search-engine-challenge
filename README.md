@@ -34,7 +34,84 @@ git clone https://github.com/VTZanetti/search-engine-challenge.git
 cd search-engine-challenge
 ```
 
-Os comandos de instalação de dependências e execução serão detalhados aqui conforme o motor for implementado.
+## Estrutura
+
+```
+├── backend/        # Rust + Actix-web (BM25 Tantivy + embeddings, RRF fusion)
+├── frontend/       # Vue 3 + GlasstoraUI (interface de busca)
+└── db/             # movie_metadata.csv + embeddings.bin (cache) 
+```
+
+## Backend (Rust + Actix-web)
+
+Motor de busca híbrido: **BM25 (Tantivy)** + **embeddings semânticos**
+(`all-MiniLM-L6-v2` via `fastembed`, local/offline), fundidos por **RRF**. Cada
+busca reporta `elapsed_ms`.
+
+```bash
+cd backend
+cargo run              # dev — http://127.0.0.1:8080
+cargo build --release  # build otimizado
+```
+
+- `GET /api/search?q=<q>&limit=20&offset=0` → resultados + `elapsed_ms` + total.
+- `GET /api/suggest?q=<q>&limit=8` → sugestões de autocomplete.
+- `GET /api/health` → status e total de filmes.
+
+## Frontend (Vue 3 + GlasstoraUI)
+
+Interface de busca com autocomplete, paginação e exibição do tempo de resposta,
+construída com [GlasstoraUI](https://github.com/VTZanetti/GlasstoraUI)
+(glassmorphism monochrome components) sobre Vite + Vue 3 + TypeScript.
+
+**Requisitos**: Node.js ≥ 18 e o backend rodando em `http://127.0.0.1:8080`
+(`cd backend && cargo run`).
+
+```bash
+cd frontend
+npm install
+npm run dev            # http://localhost:5173
+```
+
+O Vite faz proxy de `/api` para `http://127.0.0.1:8080` (config em
+`frontend/vite.config.ts`), então não há dependência de CORS em desenvolvimento.
+
+### Recursos
+
+- Busca híbrida (BM25 + embeddings) com campo estilo Google e botão de submit.
+- **Autocomplete** com debounce (~300ms) via `GET /api/suggest`, exibido em um
+  `GlassPopover` com badges de tipo (`title` / `keyword`).
+- Lista de resultados em `GlassCard`: título, ano, diretor, gêneros
+  (`GlassBadge`), `imdb_score`, plot keywords, elenco e link do IMDB.
+- **Paginação** com `GlassPagination` (20 resultados por página, `limit=20`).
+- `GlassBadge` com o total de resultados e `elapsed_ms` de cada consulta.
+- `GlassSpinner` durante o carregamento, estado vazio amigável e aviso quando o
+  backend está offline.
+- Tema monocromático escuro (padrão Glasstora) com fonte monoespaçada.
+
+### Estrutura
+
+```
+frontend/
+├── index.html
+├── vite.config.ts          # proxy /api → 127.0.0.1:8080
+├── tsconfig.json
+└── src/
+    ├── main.ts             # app Vue + GlassProvider (tema escuro)
+    ├── style.css           # tokens de tema monoespaçado
+    ├── api.ts              # cliente fetch tipado (search, suggest, health)
+    ├── App.vue             # busca, autocomplete, resultados, paginação
+    ├── env.d.ts
+    └── public/favicon.svg
+```
+
+### Build de produção
+
+```bash
+cd frontend
+npm run build      # vue-tsc + vite build → frontend/dist
+npm run preview    # serve o build localmente
+```
 ## Licença
 
 [MIT](LICENSE) © Vitor Zanetti
